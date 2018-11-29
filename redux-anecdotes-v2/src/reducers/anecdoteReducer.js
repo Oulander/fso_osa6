@@ -1,3 +1,5 @@
+import anecdoteService from '../services/anecdotes'
+
 const anecdotesAtStart = [
   'If it hurts, do it more often',
   'Adding manpower to a late software project makes it later!',
@@ -17,21 +19,70 @@ const asObject = (anecdote) => {
   }
 }
 
-const initialState = anecdotesAtStart.map(asObject)
+let initialState = anecdotesAtStart.map(asObject)
+initialState = []
 
-const reducer = (store = initialState, action) => {
-  if (action.type==='VOTE') {
-    const old = store.filter(a => a.id !==action.id)
-    const voted = store.find(a => a.id === action.id)
+const anecdoteReducer = (store = initialState, action) => {
+  switch(action.type){
 
-    return [...old, { ...voted, votes: voted.votes+1} ]
-  }
-  if (action.type === 'CREATE') {
-
-    return [...store, { content: action.content, id: getId(), votes:0 }]
+  case 'UPDATE': {
+    const oldList = store.filter(a => a.id !== action.updatedAnecdote.id)
+    return [...oldList, action.updatedAnecdote ]
   }
 
-  return store
+  case 'CREATE': {
+    return [...store, { content: action.content, id: action.id, votes: action.votes }]
+  }
+
+  case 'INIT_ANECDOTES':{
+    return action.anecdotes
+  }
+
+  default:
+    return store
+  }
 }
 
-export default reducer
+export const castVote = (anecdote) => {
+  return async (dispatch) => {
+    const id = anecdote.id
+
+    const updated = {
+      content: anecdote.content,
+      votes: anecdote.votes + 1,
+    }
+
+    const response = await anecdoteService.update(id, updated)
+
+    dispatch({
+      type: 'UPDATE',
+      updatedAnecdote: response
+    })
+  }
+}
+
+
+
+export const createAnecdote = (content) => {
+  return async (dispatch) => {
+    const response = await anecdoteService.create(content)
+    dispatch({
+      type: 'CREATE',
+      content: response.content,
+      id: response.id,
+      votes: response.votes
+    })
+  }
+}
+
+export const initializeAnecdotes = () => {
+  return async (dispatch) => {
+    const anecdotes = await anecdoteService.getAll()
+    dispatch({
+      type: 'INIT_ANECDOTES',
+      anecdotes: anecdotes
+    })
+  }
+}
+
+export default anecdoteReducer

@@ -1,21 +1,28 @@
+/* eslint react/prop-types: 0 */
 import React from 'react'
 import Notification from './components/Notification'
 import AnecdoteForm from './components/AnecdoteForm'
 import AnecdoteList from './components/AnecdoteList'
+import { connect } from 'react-redux'
+import { initializeAnecdotes } from './reducers/anecdoteReducer'
 
 class App extends React.Component {
+  componentDidMount() {
+    this.props.initializeAnecdotes()
+  }
 
   render() {
-    const anecdotes = this.props.store.getState()
     return (
       <div>
         <h1>Programming anecdotes</h1>
         <Notification />
-        <AnecdoteList store={this.props.store} />
-        <AnecdoteForm store={this.props.store} />
+        <AnecdoteList />
+        <AnecdoteForm />
       </div>
     )
   }
 }
 
-export default App
+export default connect(
+  null, { initializeAnecdotes }
+)(App)
